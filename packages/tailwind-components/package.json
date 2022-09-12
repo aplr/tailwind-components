@@ -34,7 +34,7 @@
   "scripts": {
     "build": "run-s build:*",
     "build:app": "tsc && vite build",
-    "build:types": "tsc --noEmit false --emitDeclarationOnly --isolatedModules false --outFile dist/index.js -p tsconfig.app.json",
+    "build:types": "tsc --noEmit false --emitDeclarationOnly --isolatedModules true --rootDir src -p tsconfig.app.json",
     "prebuild": "npm run clean",
     "postbuild": "npm run test",
     "clean": "rimraf dist",
