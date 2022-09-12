@@ -1,6 +1,6 @@
 # Tailwind Components
 
-Tailwind for react components. Style your app with tailwind
+Tailwind-native react components. Just like [styled-components](https://styled-components.com), without the css.
 
 #### Before 😬
 
@@ -50,7 +50,7 @@ const Button = tw.div`
 Using [npm](http://npmjs.org/package/tailwind-styled-components)
 
 ```bash
-npm i --save @fruitsco/twc
+npm i --save @aplr/tailwind-components
 ```
 
 _⚠️ This extension requires TailwindCSS to be installed and configured on your project too. [Install TailwindCSS](https://tailwindcss.com/docs/installation)_
