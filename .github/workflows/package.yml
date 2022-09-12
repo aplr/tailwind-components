@@ -1,0 +1,24 @@
+name: Publish Tailwind Components NPM package
+
+on:
+  push:
+    tags:
+      - v*
+    paths:
+      - "packages/tailwind-components/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18.x"
+          scope: "@aplr"
+      - run: npm ci
+      - run: npm publish --access public --workspace packages/tailwind-components
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -1,0 +1,30 @@
+{
+  "name": "@aplr/tailwind-components-monorepo",
+  "private": true,
+  "author": "Andreas Pfurtscheller <a@aplr.me>",
+  "homepage": "https://github.com/aplr/tailwind-components",
+  "bugs": {
+    "url": "https://github.com/aplr/tailwind-components/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aplr/tailwind-components.git"
+  },
+  "scripts": {
+    "dev": "npm run dev -w packages/sandbox",
+    "build": "npm run build -w packages/tailwind-components",
+    "prepare": "husky install"
+  },
+  "dependencies": {
+    "husky": "^8.0.1",
+    "lint-staged": "^13.0.3",
+    "prettier": "^2.5.1"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
+  },
+  "workspaces": [
+    "packages/*"
+  ]
+}

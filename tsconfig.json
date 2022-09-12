@@ -1,0 +1,4 @@
+{
+  "files": [],
+  "references": [{ "path": "./packages/sandbox" }, { "path": "./packages/tailwind-components" }]
+}
