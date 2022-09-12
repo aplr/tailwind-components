@@ -29,7 +29,8 @@
   "module": "./dist/tailwind-components.esm.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist/**/*"
+    "dist/**/*",
+    "README.md"
   ],
   "scripts": {
     "build": "run-s build:*",
@@ -41,7 +42,7 @@
     "pretest": "jest --clearCache",
     "test": "run-s test:*",
     "test:unit": "jest --passWithNoTests",
-    "prepublishOnly": "npm run clean && npm run build"
+    "prepublishOnly": "npm run build && cp ../../README.md ."
   },
   "dependencies": {
     "tailwind-merge": "^1.3.0"
