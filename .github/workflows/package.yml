@@ -17,6 +17,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: "18.x"
+          registry-url: "https://registry.npmjs.org"
           scope: "@aplr"
       - run: npm ci
       - run: npm publish --access public --workspace packages/tailwind-components
