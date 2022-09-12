@@ -1,4 +1,4 @@
-import tw, { tss } from "@fruitsco/twc"
+import tw, { tss } from "@aplr/tailwind-components"
 import { ComponentProps, ElementType, PropsWithChildren } from "react"
 
 const ButtonSizes = {
