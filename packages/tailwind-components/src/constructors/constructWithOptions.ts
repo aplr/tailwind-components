@@ -50,7 +50,7 @@ export default function constructWithOptions<
   // However a component may also be an object if it uses another utility, e.g. React.memo
   // React will output an appropriate warning however if the `tag` isn't valid
   if (!tag) {
-    throw styledError("Cannot create styled-component for component: %s.\n\n", tag)
+    throw styledError("Cannot create tailwind component for: %s.", tag)
   }
 
   /* This is callable directly as a template function */

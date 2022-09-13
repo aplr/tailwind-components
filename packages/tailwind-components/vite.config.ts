@@ -4,9 +4,14 @@ import react from "@vitejs/plugin-react"
 import dts from "vite-plugin-dts"
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig({
   plugins: [react(), dts()],
   build: {
+    commonjsOptions: {
+      esmExternals: false,
+      ignoreGlobal: true,
+      requireReturnsDefault: "namespace",
+    },
     lib: {
       entry: path.resolve(__dirname, "src", "index.ts"),
       name: "tailwind-components",
@@ -15,6 +20,7 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       external: [/react/],
       output: {
+        exports: "named",
         globals: {
           react: "React",
           "react-dom": "ReactDOM",
@@ -23,4 +29,4 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
-}))
+})
