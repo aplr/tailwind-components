@@ -7,15 +7,11 @@ import dts from "vite-plugin-dts"
 export default defineConfig({
   plugins: [react(), dts()],
   build: {
-    commonjsOptions: {
-      esmExternals: false,
-      ignoreGlobal: true,
-      requireReturnsDefault: "namespace",
-    },
     lib: {
       entry: path.resolve(__dirname, "src", "index.ts"),
       name: "tailwind-components",
       fileName: format => `tailwind-components.${format}.js`,
+      formats: ["es"],
     },
     rollupOptions: {
       external: [/react/],
