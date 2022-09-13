@@ -1,6 +1,6 @@
 {
   "name": "@aplr/tailwind-components",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "sideEffects": false,
   "keywords": [
     "react",
@@ -25,8 +25,8 @@
     "url": "git+https://github.com/aplr/tailwind-components.git",
     "directory": "packages/tailwind-components"
   },
-  "main": "./dist/tailwind-components.cjs.js",
-  "module": "./dist/tailwind-components.esm.js",
+  "main": "./dist/tailwind-components.umd.js",
+  "module": "./dist/tailwind-components.es.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
