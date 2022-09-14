@@ -32,7 +32,6 @@ type ButtonOwnProps<E extends ElementType> = PropsWithChildren<{
 type ButtonProps<E extends ElementType> = ButtonOwnProps<E> & ComponentProps<E>
 
 const StyledButton = tw.button<{ $size: ButtonSize; $style: ButtonStyle; $pill: boolean }>`
-bg-red-600
 inline-flex
 items-center
 justify-center

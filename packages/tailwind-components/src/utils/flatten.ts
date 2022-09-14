@@ -15,7 +15,7 @@ export default function flatten<Props = unknown>(
   executionContext?: ExecutionContext & Props
 ): Interpolation<Props> {
   if (Array.isArray(chunk)) {
-    return chunk.flatMap((interpolation) => {
+    return chunk.flatMap(interpolation => {
       const result = flatten<Props>(interpolation, executionContext)
       if (result === "") return []
       else if (Array.isArray(result)) return result
@@ -43,7 +43,7 @@ export default function flatten<Props = unknown>(
         console.error(
           `${getComponentName(
             chunkFn as AnyComponent
-          )} is not a styled component and cannot be referred to via component selector. See https://www.styled-components.com/docs/advanced#referring-to-other-components for more details.`
+          )} is not a tailwind component and cannot be referred to via component selector.`
         )
       }
 

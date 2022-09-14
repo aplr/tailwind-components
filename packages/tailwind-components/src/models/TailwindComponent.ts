@@ -85,9 +85,7 @@ function useStyledComponentImpl<Target extends StyledTarget, Props extends Exten
     }
   }
 
-  const generatedClasses = [tailwindStyles.generateClasses(context), context["className"]]
-    .filter(Boolean)
-    .join(" ")
+  const generatedClasses = tailwindStyles.generateClasses(context, context["className"])
 
   // handle custom elements which React doesn't properly alias
   const classPropName =
