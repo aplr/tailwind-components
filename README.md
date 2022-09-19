@@ -1,4 +1,4 @@
-# Tailwind Components
+# 🌬 Tailwind Components
 
 Tailwind-native react components. Just like [styled-components](https://styled-components.com), without the css.
 
