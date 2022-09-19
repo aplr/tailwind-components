@@ -237,20 +237,20 @@ type StyledButtonProps = {
 }
 
 const StyledButton = tw.button<StyledButtonProps>`
-inline-flex
-items-center
-border
-border-transparent
-font-medium
-shadow-sm
-focus:outline-none
-focus:ring-2
-focus:ring-offset-2
-cursor-pointer
+  inline-flex
+  items-center
+  border
+  border-transparent
+  font-medium
+  shadow-sm
+  focus:outline-none
+  focus:ring-2
+  focus:ring-offset-2
+  cursor-pointer
 
-${({ $style }) => ButtonStyles[$style]}
-${({ $size }) => ButtonSizes[$size]}
-${({ $pill }) => $pill && "rounded-full"}
+  ${({ $style }) => ButtonStyles[$style]}
+  ${({ $size }) => ButtonSizes[$size]}
+  ${({ $pill }) => $pill && "rounded-full"}
 `
 
 export const Button = <E extends ElementType = "button">({
