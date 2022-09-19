@@ -2,20 +2,24 @@
 
 Tailwind-native react components. Just like [styled-components](https://styled-components.com), without the css.
 
-#### Before 😬
+#### Before 😵‍💫
 
 ```jsx
-<div className={`flex ${primary ? "bg-indigo-600" : "bg-indigo-300"} inline-flex items-center border border-transparent text-xs font-medium rounded shadow-sm text-white hover:bg-indigo-700 focus:outline-none`}>
+const Button = ({ primary }) => (
+  <div
+    className={`flex ${
+      primary ? "bg-indigo-600" : "bg-indigo-300"
+    } inline-flex items-center border border-transparent text-xs font-medium rounded shadow-sm text-white hover:bg-indigo-700 focus:outline-none`}
+  />
+)
 ```
 
-#### After 🥳
-
-`<Button $primary={false}>`
+#### After 🧖
 
 ```ts
-const Button = tw.div`
-  ${p => (p.$primary ? "bg-indigo-600" : "bg-indigo-300")}
-  
+const StyledButton = tw.div`
+  ${({ $primary }) => ($primary ? "bg-indigo-600" : "bg-indigo-300")}
+
   flex
   items-center
   border
@@ -25,52 +29,46 @@ const Button = tw.div`
   rounded
   shadow-sm
   text-white
-  
+
   hover:bg-indigo-700
   focus:outline-none
 `
+
+<StyledButton $primary={false}>
 ```
 
 ## Features
 
-♻️ Reusable
-
-🧩 Extendable
-
 💅 Compatible with Styled Components
 
-⚡️ Use props like every React Component
+⚡️ Use it like any other React Component
 
-🤯 Stop editing 400+ characters lines
+🤯 No lines exceeding max line length
 
 🧘 Cleaner code in the render function
 
 ## Install
 
-Using [npm](http://npmjs.org/package/tailwind-styled-components)
+> You have to install and configure Tailwind CSS to use this extension. [Install TailwindCSS](https://tailwindcss.com/docs/installation)
 
 ```bash
-npm i --save @aplr/tailwind-components
+npm install --save @aplr/tailwind-components
 ```
 
-_⚠️ This extension requires TailwindCSS to be installed and configured on your project too. [Install TailwindCSS](https://tailwindcss.com/docs/installation)_
+#### VSCode IntelliSense
 
-#### [Optional] Configure IntelliSense autocomplete on VSCode
+First, install [Tailwind CSS IntelliSense VSCode extension](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss)
 
-First, install Tailwind CSS IntelliSense VSCode extension
-
-https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss
-
-Then add these user settings ([How to edit VSCode settings?](https://code.visualstudio.com/docs/getstarted/settings))
+Then, add the following settings to your user or workspace settings ([How to edit VSCode settings?](https://code.visualstudio.com/docs/getstarted/settings))
 
 ```json
 {
   "tailwindCSS.includeLanguages": {
-    "typescript": "javascript", // if you are using typescript
-    "typescriptreact": "javascript" // if you are using typescript with react
+    "typescript": "javascript",
+    "typescriptreact": "javascript"
   },
   "editor.quickSuggestions": {
-    "strings": true // forces VS Code to trigger completions when editing "string" content
+    "strings": true
   },
   "tailwindCSS.experimental.classRegex": [
     "tw(?:(?:(?:(?:\\[[.*]+\\])|(?:\\.[^`]+))+)|(?:\\(.+\\)))(?:<.+>)?`([^`]*)`",
@@ -81,130 +79,98 @@ Then add these user settings ([How to edit VSCode settings?](https://code.visual
 
 ## Usage
 
-Create a Tailwind Styled Component with Tailwind rules that you can render directly
-
-```ts
-const Container = tw.div`
-  first-letter:flex
-  first-letter:items-center
-  first-letter:justify-center
-  first-letter:flex-col
-  first-letter:w-full
-  first-letter:bg-indigo-600
-`
-```
+Import the `tw` helper and use it to define React components styled with TailwindCSS.
 
 ```js
-render(
-  <Container>
-    <div>Use the Container as any other React Component</div>
-  </Container>
-)
+import tw from "@aplr/tailwind-components"
+import { render } from "react-dom"
+
+const Button = tw.button`
+  inline-flex
+  flex-row
+  items-center
+  justify-center
+  bg-indigo-500
+  hover:bg-indigo-700
+`
+
+render(<Button>Click me!</Button>)
 ```
 
-Will be rendered as
+#### HTML
 
 ```html
-<div class="flex items-center justify-center flex-col w-full bg-indigo-600">
-  <div>Use the Container as any other React Component</div>
-</div>
+<button class="inline-flex flex-row items-center justify-center bg-indigo-500 hover:bg-indigo-700">
+  Click me!
+</button>
 ```
 
-### Conditional class names
+### Interpolations
 
-Set tailwind class conditionally with the same syntax as [styled components](https://styled-components.com/docs/basics#adapting-based-on-props)
+Tailwind Components support interpolations in the template syntax. The most common use are conditional class names, as shown in the following example.
 
-```ts
+```tsx
 interface ButtonProps {
   $primary: boolean
 }
 
 const Button = tw.button<ButtonProps>`
-    flex
-    ${p => (p.$primary ? "bg-indigo-600" : "bg-indigo-300")}
+  inline-flex
+  ${({ $primary }) => ($primary ? "bg-indigo-600" : "bg-indigo-300")}
 `
+
+render(<Button $primary />)
 ```
 
-_Tailwind Styled Components supports [Transient Props](https://styled-components.com/docs/api#transient-props)_
-
-_Prefix the props name with a dollar sign ($) to prevent forwarding them to the DOM element_
-
-```jsx
-<Button $primary={true} />
-```
-
-Will be rendered as
+#### HTML
 
 ```html
-<button class="flex bg-indigo-600">
+<button class="inline-flex bg-indigo-600">
   <!-- children -->
 </button>
 ```
 
-and
+> Be sure to set the entire class name
+>
+> ✅&nbsp;`${({ $primary }) => $primary ? "bg-indigo-600" : "bg-indigo-300"}`
+>
+> ❌&nbsp;`bg-indigo-${({ $primary }) => $primary ? "600" : "300"}`
 
-```jsx
-<Button $primary={false} />
+### Transient props
+
+Tailwind Components support [transient props](https://styled-components.com/docs/api#transient-props). Prefixing prop names with a dollar sign ($) prevents them being forwarded to the DOM.
+
+### Extend a Tailwind Component
+
+```tsx
+const RedButton = tw<ButtonProps>(Button)`
+  ${({ $primary }) => ($primary ? "bg-red-600" : "bg-red-300")}
+`
+
+render(<RedButton $primary />)
 ```
 
-Will be rendered as
+#### HTML
 
 ```html
-<button class="flex bg-indigo-300">
+<button class="inline-flex bg-red-600">
   <!-- children -->
 </button>
 ```
 
----
-
-**Be sure to set the entire class name**
-
-✅ &nbsp;Do `${p => p.$primary ? "bg-indigo-600" : "bg-indigo-300"}`
-
-❌ &nbsp;Don't `bg-indigo-${p => p.$primary ? "600" : "300"}`
-
----
-
-### Extends
+### Extend a Styled Component
 
 ```js
-const DefaultContainer = tw.div`
-    flex
-    items-center
+const StyledComponent = styled.div`
+  filter: blur(1px);
+`
+
+const  = tw(StyledComponent)`
+  flex
 `
 ```
 
-```js
-const RedContainer = tw(DefaultContainer)`
-    bg-red-300
-`
-```
-
-Will be rendered as
-
-```html
-<div class="flex items-center bg-red-300">
-  <!-- children -->
-</div>
-```
-
-### Extends Styled Component
-
-Extend [styled components](https://github.com/styled-components/styled-components)
-
-```js
-const StyledComponentWithCustomCss = styled.div`
-    filter: blur(1px);
-`
-
-const  = tw(StyledComponentWithCustomCss)`
-   flex
-`
-```
-
-_Css rule `filter` is not supported by default on TailwindCSS_
-
-Will be rendered as
+#### HTML:
 
 ```html
 <div class="flex" style="filter: blur(1px);">
@@ -214,56 +180,95 @@ Will be rendered as
 
 ### Polymorphic Components
 
-If you want to keep all the styling you've applied to a component but just switch out what's being ultimately rendered (be it a different HTML tag or a different custom component), you can use the `$as` prop to do this at runtime.
+In order to change the underlying component, you can pass the component to be rendered to the `$as` prop at runtime. The styles will stay the same, just the element is changed.
 
 ```js
 const Button = tw.button`inline-flex items-center p-2`
 
-<Button $as="a" href="#">Link</Button>
+<Button $as="a" href="#">Click me!</Button>
 ```
 
-Will render as
+#### HTML
 
 ```html
-<a href="#" class="inline-flex items-center p-2">Link</a>
+<a href="#" class="inline-flex items-center p-2">Click me!</a>
 ```
 
-## Example
+## Advanced Example
 
 ```tsx
-import tw from "tailwind-styled-components"
-import styled from "styled-components"
+import { ComponentProps, ElementType, PropsWithChildren } from "react"
+import tw, { tss } from "@aplr/tailwind-components"
 
-// Create a <Title> react component that renders an <h1> which is
-// indigo and sized at 1.125rem
-interface TitleProps {
-  $large: boolean
+const ButtonSizes = {
+  xs: tss`rounded px-3 py-1.5 text-xs`,
+  sm: tss`rounded-sm px-4 py-2 text-sm`,
+  md: tss`rounded-md px-5 py-2 text-sm`,
+  lg: tss`rounded-md px-6 py-2 text-base`,
+  xl: tss`rounded-md px-7 py-3 text-lg`,
 }
 
-const Title = tw.h1<TitleProps>`
-  ${p => (p.$large ? "text-lg" : "text-base")}
-  text-indigo-500
+const ButtonStyles = {
+  primary: tss`bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500`,
+  secondary: tss`bg-blue-100 text-blue-700 hover:bg-blue-200 focus:ring-blue-500`,
+  light: tss`bg-white text-gray-700 hover:bg-gray-50 border-gray-300 focus:ring-blue-500`,
+  success: tss`bg-green-600 text-white hover:bg-green-700 focus:ring-green-500`,
+  danger: tss`bg-red-600 text-white hover:bg-red-700 focus:ring-red-500`,
+  dark: tss`bg-zinc-800 text-white hover:bg-zinc-900 focus:ring-zinc-500`,
+}
+
+export type ButtonSize = keyof typeof ButtonSizes
+
+export type ButtonStyle = keyof typeof ButtonStyles
+
+type ButtonOwnProps<E extends ElementType> = PropsWithChildren<{
+  as?: E
+  size?: ButtonSize
+  style?: ButtonStyle
+  pill?: boolean
+}>
+
+type ButtonProps<E extends ElementType> = ButtonOwnProps<E> & ComponentProps<E>
+
+type StyledButtonProps = {
+  $size: ButtonSize
+  $style: ButtonStyle
+  $pill: boolean
+}
+
+const StyledButton = tw.button<StyledButtonProps>`
+inline-flex
+items-center
+border
+border-transparent
+font-medium
+shadow-sm
+focus:outline-none
+focus:ring-2
+focus:ring-offset-2
+cursor-pointer
+
+${({ $style }) => ButtonStyles[$style]}
+${({ $size }) => ButtonSizes[$size]}
+${({ $pill }) => $pill && "rounded-full"}
 `
 
-// Create a <SpecialBlueContainer> react component that renders a <section> with
-// a special blue background color
-const SpecialBlueContainer = styled.section`
-  background-color: #0366d6;
-`
+export const Button = <E extends ElementType = "button">({
+  as,
+  size = "md",
+  style = "primary",
+  pill = false,
+  children,
+  ...props
+}: ButtonProps<E>) => (
+  <StyledButton $as={as} $style={style} $size={size} $pill={pill} {...props}>
+    {children}
+  </StyledButton>
+)
 
-// Create a <Container> react component that extends the SpecialBlueContainer to render
-// a tailwind <section> with the special blue background and adds the flex classes
-const Container = tw(SpecialBlueContainer)`
-    flex
-    items-center
-    justify-center
-    w-full
-`
-
-// Use them like any other React component – except they're styled!
 render(
-  <Container>
-    <Title $large={true}>Hello World, this is my first tailwind styled component!</Title>
-  </Container>
+  <Button as="a" href="#" size="lg" style="light" pill>
+    Click me!
+  </Button>
 )
 ```

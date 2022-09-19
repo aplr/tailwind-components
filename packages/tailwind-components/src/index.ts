@@ -8,6 +8,7 @@ export type {
   IStyledStatics,
   StyledOptions,
   StyledTarget,
+  Interpolation,
 } from "./types"
 
 export default styled
