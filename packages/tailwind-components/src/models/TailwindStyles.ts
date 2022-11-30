@@ -1,5 +1,5 @@
 import { twMerge } from "tailwind-merge"
-import { RuleSet } from "../types"
+import { ExecutionContext, RuleSet } from "../types"
 import flatten from "../utils/flatten"
 
 const clean = (chunks: string[]) =>
@@ -11,15 +11,18 @@ const clean = (chunks: string[]) =>
     .split(" ")
     .filter(c => c !== ",")
 
-export class TailwindStyles {
-  rules: RuleSet<any>
+export class TailwindStyles<Props extends object> {
+  rules: RuleSet<Props>
+  baseStyle?: TailwindStyles<Props>
 
-  constructor(rules: RuleSet<any>) {
+  constructor(rules: RuleSet<any>, baseStyle?: TailwindStyles<Props>) {
     this.rules = rules
+    this.baseStyle = baseStyle
   }
 
-  generateClasses(executionContext: Object, inheritedClasses: string): string {
+  generateClasses(executionContext: ExecutionContext & Props, inheritedClasses?: string): string {
+    const baseGeneratedClasses = this.baseStyle?.generateClasses(executionContext) ?? []
     const generatedClasses = clean(flatten(this.rules, executionContext) as string[])
-    return twMerge(...generatedClasses.concat(inheritedClasses))
+    return twMerge([baseGeneratedClasses, ...generatedClasses, inheritedClasses].filter(Boolean))
   }
 }

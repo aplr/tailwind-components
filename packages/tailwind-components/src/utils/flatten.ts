@@ -1,4 +1,4 @@
-import { AnyComponent, ExecutionContext, Interpolation, RuleSet } from "../types"
+import { AnyComponent, ExecutionContext, Interpolation, RuleSet, TailwindComponent } from "../types"
 import getComponentName from "./getComponentName"
 import isFunction from "./isFunction"
 import isPlainObject from "./isPlainObject"
@@ -10,21 +10,19 @@ import isStatelessFunction from "./isStatelessFunction"
 const isFalsish = (chunk: any): chunk is undefined | null | false | "" =>
   chunk === undefined || chunk === null || chunk === false || chunk === ""
 
-export default function flatten<Props = unknown>(
+export default function flatten<Props extends object>(
   chunk: Interpolation<Props>,
   executionContext?: ExecutionContext & Props
-): Interpolation<Props> {
+): RuleSet<Props> {
   if (Array.isArray(chunk)) {
     return chunk.flatMap(interpolation => {
       const result = flatten<Props>(interpolation, executionContext)
-      if (result === "") return []
-      else if (Array.isArray(result)) return result
-      else return [result]
+      return result.length === 0 ? [] : [result]
     })
   }
 
   if (isFalsish(chunk)) {
-    return ""
+    return []
   }
 
   /* Either execute or defer the function */
@@ -49,9 +47,9 @@ export default function flatten<Props = unknown>(
 
       return flatten(result, executionContext)
     } else {
-      return chunk
+      return [chunk as unknown as TailwindComponent<"div", any>]
     }
   }
 
-  return chunk.toString()
+  return [chunk.toString()]
 }

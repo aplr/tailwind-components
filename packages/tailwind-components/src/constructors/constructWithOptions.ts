@@ -1,12 +1,11 @@
+import React from "react"
 import {
   Attrs,
-  ExecutionContext,
-  ExtensibleObject,
+  AttrsArg,
   Interpolation,
   TailwindComponent,
   TailwindComponentFactory,
   KnownTarget,
-  RuleSet,
   StyledOptions,
   StyledTarget,
   Styles,
@@ -15,36 +14,51 @@ import { EMPTY_OBJECT } from "../utils/empties"
 import styledError from "../utils/error"
 import tss from "./tss"
 
+type OptionalIntersection<A, B> = {
+  [K in Extract<keyof A, keyof B>]?: A[K]
+}
+
+type MarkPropsSatisfiedByAttrs<T extends Attrs, Props extends object> = T extends (
+  ...args: any
+) => infer P
+  ? Omit<Props, keyof P> & OptionalIntersection<Props, P>
+  : Omit<Props, keyof T> & Partial<T>
+
 export interface Styled<
   Target extends StyledTarget,
-  DerivedProps = Target extends KnownTarget ? React.ComponentProps<Target> : unknown,
-  OuterProps = unknown,
-  OuterStatics = unknown
+  OuterProps extends object = Target extends KnownTarget
+    ? React.ComponentPropsWithRef<Target>
+    : JSX.IntrinsicElements["div"],
+  OuterStatics extends object = object
 > {
-  <Props = unknown, Statics = unknown>(
-    initialStyles: Styles<DerivedProps & OuterProps & Props>,
-    ...interpolations: Interpolation<ExecutionContext & DerivedProps & OuterProps & Props>[]
-  ): TailwindComponent<Target, DerivedProps & OuterProps & Props> & OuterStatics & Statics
-  attrs(
-    attrs: Attrs<ExtensibleObject & DerivedProps & OuterProps>
-  ): Styled<Target, DerivedProps, OuterProps, OuterStatics>
-  withConfig(
-    config: StyledOptions<DerivedProps & OuterProps>
-  ): Styled<Target, DerivedProps, OuterProps, OuterStatics>
+  <Props extends object = object, Statics extends object = object>(
+    initialStyles: Styles<OuterProps & Props>,
+    ...interpolations: Interpolation<OuterProps & Props>[]
+  ): TailwindComponent<Target, OuterProps & Props> & OuterStatics & Statics
+
+  <Props extends object = object, Statics extends object = object>(
+    initialStyles: Styles<OuterProps & Props>,
+    ...interpolations: Interpolation<OuterProps & Props>[]
+  ): TailwindComponent<Target, OuterProps & Props> & OuterStatics & Statics
+
+  attrs: <T extends Attrs>(
+    attrs: AttrsArg<T extends (...args: any) => infer P ? OuterProps & P : OuterProps & T>
+  ) => Styled<Target, MarkPropsSatisfiedByAttrs<T, OuterProps>, OuterStatics>
+
+  withConfig: (config: StyledOptions<OuterProps>) => Styled<Target, OuterProps, OuterStatics>
 }
 
 export default function constructWithOptions<
   Target extends StyledTarget,
-  DerivedProps = Target extends KnownTarget ? React.ComponentProps<Target> : unknown,
-  OuterProps = unknown, // used for styled<{}>().attrs() so attrs() gets the generic prop context
-  OuterStatics = unknown
+  OuterProps extends object = Target extends KnownTarget
+    ? React.ComponentPropsWithRef<Target>
+    : JSX.IntrinsicElements["div"],
+  OuterStatics extends object = object
 >(
-  componentConstructor: TailwindComponentFactory<any, any, any>,
+  componentConstructor: TailwindComponentFactory<Target, OuterProps, OuterStatics>,
   tag: Target,
-  options: StyledOptions<DerivedProps & OuterProps> = EMPTY_OBJECT as StyledOptions<
-    DerivedProps & OuterProps
-  >
-) {
+  options: StyledOptions<OuterProps> = EMPTY_OBJECT
+): Styled<Target, OuterProps, OuterStatics> {
   // We trust that the tag is a valid component as long as it isn't falsish
   // Typically the tag here is a string or function (i.e. class or pure function component)
   // However a component may also be an object if it uses another utility, e.g. React.memo
@@ -54,25 +68,21 @@ export default function constructWithOptions<
   }
 
   /* This is callable directly as a template function */
-  const templateFunction = <Props = unknown, Statics = unknown>(
-    initialStyles: Styles<DerivedProps & OuterProps & Props>,
-    ...interpolations: Interpolation<ExecutionContext & DerivedProps & OuterProps & Props>[]
-  ) =>
-    componentConstructor(
-      tag,
-      options as unknown as StyledOptions<DerivedProps & OuterProps & Props>,
-      tss<ExecutionContext & DerivedProps & OuterProps & Props>(
-        initialStyles,
-        ...interpolations
-      ) as RuleSet<DerivedProps & OuterProps & Props>
-    ) as ReturnType<
-      TailwindComponentFactory<Target, DerivedProps & OuterProps & Props, OuterStatics & Statics>
-    >
+  const templateFunction = <Props extends object = object, Statics extends object = object>(
+    initialStyles: Styles<OuterProps & Props>,
+    ...interpolations: Interpolation<OuterProps & Props>[]
+  ) => componentConstructor<Props, Statics>(tag, options, tss(initialStyles, ...interpolations))
 
   /* Modify/inject new props at runtime */
-  templateFunction.attrs = (attrs: Attrs<ExtensibleObject & DerivedProps & OuterProps>) =>
-    constructWithOptions<Target, DerivedProps & OuterProps, OuterStatics>(
-      componentConstructor,
+  templateFunction.attrs = <T extends Attrs>(
+    attrs: AttrsArg<T extends (...args: any) => infer P ? OuterProps & P : OuterProps & T>
+  ) =>
+    constructWithOptions<Target, MarkPropsSatisfiedByAttrs<T, OuterProps>, OuterStatics>(
+      componentConstructor as unknown as TailwindComponentFactory<
+        Target,
+        MarkPropsSatisfiedByAttrs<T, OuterProps>,
+        OuterStatics
+      >,
       tag,
       {
         ...options,
@@ -82,15 +92,11 @@ export default function constructWithOptions<
 
   /**
    * If config methods are called, wrap up a new template function and merge options */
-  templateFunction.withConfig = (config: StyledOptions<DerivedProps & OuterProps>) =>
-    constructWithOptions<Target, DerivedProps, OuterProps, OuterStatics>(
-      componentConstructor,
-      tag,
-      {
-        ...options,
-        ...config,
-      }
-    )
+  templateFunction.withConfig = (config: StyledOptions<OuterProps>) =>
+    constructWithOptions<Target, OuterProps, OuterStatics>(componentConstructor, tag, {
+      ...options,
+      ...config,
+    })
 
   return templateFunction
 }

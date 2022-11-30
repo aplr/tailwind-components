@@ -1,9 +1,10 @@
 import { createElement, Ref, forwardRef } from "react"
 import type {
   AnyComponent,
-  Attrs,
+  AttrsArg,
+  Dict,
   ExecutionContext,
-  ExtensibleObject,
+  ExecutionProps,
   TailwindComponent,
   TailwindComponentFactory,
   IStyledStatics,
@@ -21,7 +22,17 @@ import isTag from "../utils/isTag"
 import joinStrings from "../utils/joinStrings"
 import { TailwindStyles } from "./TailwindStyles"
 
-function mergeAttr<Props = unknown>(key: string, value: any, context: ExecutionContext & Props) {
+type ResolveAttrsContext<
+  Target extends StyledTarget,
+  Props extends ExecutionProps
+> = ExecutionContext &
+  Props & { class?: string; className?: string; ref?: React.Ref<Target>; style?: object }
+
+function mergeAttr<Target extends StyledTarget, Props extends ExecutionProps>(
+  key: string,
+  value: any,
+  context: ResolveAttrsContext<Target, Props>
+) {
   switch (key) {
     case "className":
       return joinStrings(context[key], value)
@@ -32,65 +43,64 @@ function mergeAttr<Props = unknown>(key: string, value: any, context: ExecutionC
   }
 }
 
-function useResolvedAttrs<Props = unknown>(props: Props, attrs: Attrs<Props>[]) {
-  // NOTE: can't memoize this
-  // returns [context, resolvedAttrs]
-  // where resolvedAttrs is only the things injected by the attrs themselves
-  const context = props as ExecutionContext & Props
-
-  const resolvedAttrs = attrs.reduce((acc, attrDef) => {
-    const resolvedAttrDef = typeof attrDef === "function" ? attrDef(context) : attrDef
+function useResolvedAttrs<Target extends StyledTarget, Props extends ExecutionProps>(
+  props: Props,
+  attrs: AttrsArg<Props>[]
+) {
+  return attrs.reduce<ResolveAttrsContext<Target, Props>>((acc, attrDef) => {
+    const resolvedAttrDef = typeof attrDef === "function" ? attrDef(acc) : attrDef
 
     const attrs = Object.entries(resolvedAttrDef).reduce(
       (acc, [key, value]) => ({
         ...acc,
-        [key]: mergeAttr(key, value, context),
+        [key]: mergeAttr(key, value, acc),
       }),
-      {} as Props
+      {} as ResolveAttrsContext<Target, Props>
     )
 
     return { ...acc, ...attrs }
-  }, {} as Props)
-
-  Object.assign(context, resolvedAttrs)
-
-  return context
+  }, props)
 }
 
-function useStyledComponentImpl<Target extends StyledTarget, Props extends ExtensibleObject>(
+function useStyledComponentImpl<Target extends StyledTarget, Props extends ExecutionProps>(
   forwardedComponent: TailwindComponent<Target, Props>,
   props: Props,
   forwardedRef: Ref<Element>
 ) {
-  const { attrs: componentAttrs, target, tailwindStyles } = forwardedComponent
+  const { attrs: componentAttrs, tailwindStyles, target } = forwardedComponent
 
-  const context = useResolvedAttrs<Props>(props, componentAttrs)
+  const context = useResolvedAttrs<Target, Props>(props, componentAttrs)
 
   const refToForward = forwardedRef
 
-  const elementToBeCreated: StyledTarget = context.$as || context.as || target
+  const elementToBeCreated: StyledTarget = context.as || target
 
   const isTargetTag = isTag(elementToBeCreated)
-  const propsForElement: ExtensibleObject = {}
+  const propsForElement: Dict<any> = {}
 
   // eslint-disable-next-line guard-for-in
   for (const key in context) {
-    if (key[0] === "$" || key === "as") {
+    // @ts-expect-error for..in iterates strings instead of keyof
+    if (context[key] === undefined) {
+      // Omit undefined values from props passed to wrapped element.
+      // This enables using .attrs() to remove props, for example.
+    } else if (key[0] === "$" || key === "as") {
+      // Omit transient props and execution props.
       continue
     } else if (key === "forwardedAs") {
-      propsForElement.as = context[key]
+      propsForElement.as = context.forwardedAs
     } else {
-      // Don't pass through non HTML tags through to HTML elements
+      // @ts-expect-error for..in iterates strings instead of keyof
       propsForElement[key] = context[key]
     }
   }
 
-  const generatedClasses = tailwindStyles.generateClasses(context, context["className"])
+  const generatedClasses = tailwindStyles.generateClasses(context, context.className)
 
   // handle custom elements which React doesn't properly alias
   const classPropName =
     isTargetTag &&
-    domElements.indexOf(elementToBeCreated as unknown as Extract<typeof domElements, string>) === -1
+    domElements.indexOf(elementToBeCreated as Extract<typeof domElements, string>) === -1
       ? "class"
       : "className"
 
@@ -103,30 +113,35 @@ function useStyledComponentImpl<Target extends StyledTarget, Props extends Exten
 
 function createStyledComponent<
   Target extends StyledTarget,
-  OuterProps extends ExtensibleObject,
-  Statics = unknown
+  OuterProps extends object,
+  Statics extends object = object
 >(
   target: Target,
   options: StyledOptions<OuterProps>,
   rules: RuleSet<OuterProps>
 ): ReturnType<TailwindComponentFactory<Target, OuterProps, Statics>> {
-  const isTargetStyledComp = isTailwindComponent(target)
-  const styledComponentTarget = target as TailwindComponent<Target, OuterProps>
+  const isTargetTailwindComp = isTailwindComponent(target)
+  const tailwindComponentTarget = target as TailwindComponent<Target, OuterProps>
   const isCompositeComponent = !isTag(target)
 
   const { attrs = EMPTY_ARRAY, displayName = generateDisplayName(target) } = options
 
   // fold the underlying StyledComponent attrs up (implicit extend)
   const finalAttrs =
-    isTargetStyledComp && styledComponentTarget.attrs
-      ? styledComponentTarget.attrs.concat(attrs as unknown as Attrs<OuterProps>[]).filter(Boolean)
-      : (attrs as Attrs<OuterProps>[])
+    isTargetTailwindComp && tailwindComponentTarget.attrs
+      ? tailwindComponentTarget.attrs
+          .concat(attrs as unknown as AttrsArg<OuterProps>[])
+          .filter(Boolean)
+      : (attrs as AttrsArg<OuterProps>[])
 
-  const tailwindStyles = new TailwindStyles(rules)
+  const tailwindStyles = new TailwindStyles(
+    rules,
+    isTargetTailwindComp ? tailwindComponentTarget.tailwindStyles : undefined
+  )
 
   // statically styled-components don't need to build an execution context object,
   // and shouldn't be increasing the number of class names
-  function twForwardRef(props: OuterProps, ref: Ref<Element>) {
+  function twForwardRef(props: ExecutionProps & OuterProps, ref: Ref<Element>) {
     // eslint-disable-next-line
     return useStyledComponentImpl<Target, OuterProps>(WrappedStyledComponent, props, ref)
   }
@@ -147,8 +162,8 @@ function createStyledComponent<
   WrappedStyledComponent.tailwindStyles = tailwindStyles
   WrappedStyledComponent.displayName = displayName
 
-  // fold the underlying StyledComponent target up since we folded the styles
-  WrappedStyledComponent.target = isTargetStyledComp ? styledComponentTarget.target : target
+  // fold the underlying TailwindComponent target up since we folded the styles
+  WrappedStyledComponent.target = isTargetTailwindComp ? tailwindComponentTarget.target : target
 
   if (isCompositeComponent) {
     const compositeComponentTarget = target as AnyComponent
