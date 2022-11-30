@@ -1,4 +1,11 @@
-import { ComponentType, ElementType, ExoticComponent, ReactElement } from "react"
+import {
+  ComponentProps,
+  ComponentPropsWithRef,
+  ComponentType,
+  ExoticComponent,
+  ForwardRefExoticComponent,
+  ReactElement,
+} from "react"
 import { TailwindStyles } from "./models/TailwindStyles"
 import { IsTwElement } from "./utils/isTailwindComponent"
 
@@ -16,23 +23,21 @@ export interface StyledOptions<Props extends object> {
   displayName?: string
 }
 
-export type Dict<T> = { [key: string]: T }
-
-export type KnownTarget<Props = any> = ElementType<Props> | AnyComponent<Props>
+export type KnownTarget = keyof JSX.IntrinsicElements | AnyComponent
 
 export type StyledTarget =
   | string // allow custom elements, etc.
   | KnownTarget
+
+export type Dict<T> = { [key: string]: T }
 
 export interface ExecutionProps {
   as?: KnownTarget
   forwardedAs?: KnownTarget
 }
 
-export interface ExecutionContext extends ExecutionProps {}
-
 export interface StyleFunction<Props extends object> {
-  (executionContext: Omit<ExecutionContext, keyof Props> & Props): Interpolation<Props>
+  (executionContext: Omit<ExecutionProps, keyof Props> & Props): Interpolation<Props>
 }
 
 export type Interpolation<Props extends object> =
@@ -40,7 +45,7 @@ export type Interpolation<Props extends object> =
   | TemplateStringsArray
   | string
   | number
-  | boolean
+  | false
   | undefined
   | null
   | OmitSignatures<TailwindComponent<any, any>>
@@ -48,22 +53,36 @@ export type Interpolation<Props extends object> =
 
 export type AttrsArg<Props extends object> =
   | (Omit<ExecutionProps, keyof Props> & Props)
-  | ((props: Omit<ExecutionContext, keyof Props> & Props) => Partial<Props>)
+  | ((props: Omit<ExecutionProps, keyof Props> & Props) => Partial<Props>)
 
 export type Attrs = object | ((...args: any) => object)
 
 export type RuleSet<Props extends object> = Interpolation<Props>[]
 
-export interface IStyledStatics<Props extends object> {
-  attrs: AttrsArg<Props>[]
-  target: StyledTarget
-  tailwindStyles: TailwindStyles<Props>
-}
-
 export type Styles<Props extends object> = TemplateStringsArray | StyleFunction<Props>
 
+export interface Flattener<Props extends object> {
+  (
+    chunks: Interpolation<Props>[],
+    executionContext: Object | null | undefined
+  ): Interpolation<Props>[]
+}
+
+export type FlattenerResult<Props extends object> =
+  | RuleSet<Props>
+  | number
+  | string
+  | string[]
+  | TailwindComponent<any, any>
+
+export interface IStyledStatics<OuterProps extends object> {
+  attrs: AttrsArg<OuterProps>[]
+  target: StyledTarget
+  tailwindStyles: TailwindStyles<OuterProps>
+}
+
 export type PolymorphicComponentProps<E extends StyledTarget, P extends object> = Omit<
-  E extends KnownTarget ? P & Omit<React.ComponentPropsWithRef<E>, keyof P> : P,
+  E extends KnownTarget ? P & Omit<ComponentPropsWithRef<E>, keyof P> : P,
   "as"
 > & {
   as?: P extends { as?: string | AnyComponent } ? P["as"] : E
@@ -71,10 +90,10 @@ export type PolymorphicComponentProps<E extends StyledTarget, P extends object> 
 
 type OmitSignatures<T> = Pick<T, keyof T>
 
-export interface PolymorphicComponent<P extends object, FallbackComponent extends StyledTarget>
-  extends OmitSignatures<React.ForwardRefExoticComponent<P>> {
+export interface PolymorphicComponent<Props extends object, FallbackComponent extends StyledTarget>
+  extends OmitSignatures<ForwardRefExoticComponent<Props>> {
   <E extends StyledTarget = FallbackComponent>(
-    props: PolymorphicComponentProps<E, P>
+    props: PolymorphicComponentProps<E, Props>
   ): ReactElement | null
 }
 
@@ -84,7 +103,7 @@ export interface TailwindComponent<Target extends StyledTarget, Props extends ob
     IsTwElement {
   defaultProps?: Partial<
     (Target extends KnownTarget
-      ? ExecutionProps & Omit<React.ComponentProps<Target>, keyof ExecutionProps>
+      ? ExecutionProps & Omit<ComponentProps<Target>, keyof ExecutionProps>
       : ExecutionProps) &
       Props
   >

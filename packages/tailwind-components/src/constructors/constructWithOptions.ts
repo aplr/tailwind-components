@@ -1,4 +1,4 @@
-import React from "react"
+import React, { ComponentPropsWithRef } from "react"
 import {
   Attrs,
   AttrsArg,
@@ -27,7 +27,7 @@ type MarkPropsSatisfiedByAttrs<T extends Attrs, Props extends object> = T extend
 export interface Styled<
   Target extends StyledTarget,
   OuterProps extends object = Target extends KnownTarget
-    ? React.ComponentPropsWithRef<Target>
+    ? ComponentPropsWithRef<Target>
     : JSX.IntrinsicElements["div"],
   OuterStatics extends object = object
 > {
@@ -51,7 +51,7 @@ export interface Styled<
 export default function constructWithOptions<
   Target extends StyledTarget,
   OuterProps extends object = Target extends KnownTarget
-    ? React.ComponentPropsWithRef<Target>
+    ? ComponentPropsWithRef<Target>
     : JSX.IntrinsicElements["div"],
   OuterStatics extends object = object
 >(

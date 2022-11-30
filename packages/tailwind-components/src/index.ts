@@ -3,7 +3,6 @@ import styled from "./constructors/styled"
 export * from "./base"
 
 export type {
-  ExecutionContext,
   ExecutionProps,
   TailwindComponent,
   TailwindComponentFactory,

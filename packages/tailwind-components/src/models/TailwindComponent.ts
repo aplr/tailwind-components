@@ -3,7 +3,6 @@ import type {
   AnyComponent,
   AttrsArg,
   Dict,
-  ExecutionContext,
   ExecutionProps,
   TailwindComponent,
   TailwindComponentFactory,
@@ -17,7 +16,7 @@ import domElements from "../utils/domElements"
 import { EMPTY_ARRAY } from "../utils/empties"
 import generateDisplayName from "../utils/generateDisplayName"
 import hoist from "../utils/hoist"
-import isTailwindComponent from "../utils/isTailwindComponent"
+import isTailwindComponent, { isTwElement } from "../utils/isTailwindComponent"
 import isTag from "../utils/isTag"
 import joinStrings from "../utils/joinStrings"
 import { TailwindStyles } from "./TailwindStyles"
@@ -25,7 +24,7 @@ import { TailwindStyles } from "./TailwindStyles"
 type ResolveAttrsContext<
   Target extends StyledTarget,
   Props extends ExecutionProps
-> = ExecutionContext &
+> = ExecutionProps &
   Props & { class?: string; className?: string; ref?: React.Ref<Target>; style?: object }
 
 function mergeAttr<Target extends StyledTarget, Props extends ExecutionProps>(
@@ -71,6 +70,8 @@ function useStyledComponentImpl<Target extends StyledTarget, Props extends Execu
 
   const context = useResolvedAttrs<Target, Props>(props, componentAttrs)
 
+  console.log(context)
+
   const refToForward = forwardedRef
 
   const elementToBeCreated: StyledTarget = context.as || target
@@ -86,7 +87,6 @@ function useStyledComponentImpl<Target extends StyledTarget, Props extends Execu
       // This enables using .attrs() to remove props, for example.
     } else if (key[0] === "$" || key === "as") {
       // Omit transient props and execution props.
-      continue
     } else if (key === "forwardedAs") {
       propsForElement.as = context.forwardedAs
     } else {
@@ -161,6 +161,7 @@ function createStyledComponent<
   WrappedStyledComponent.attrs = finalAttrs
   WrappedStyledComponent.tailwindStyles = tailwindStyles
   WrappedStyledComponent.displayName = displayName
+  WrappedStyledComponent[isTwElement] = true
 
   // fold the underlying TailwindComponent target up since we folded the styles
   WrappedStyledComponent.target = isTargetTailwindComp ? tailwindComponentTarget.target : target
@@ -177,6 +178,7 @@ function createStyledComponent<
         displayName: true,
         target: true,
         tailwindStyles: true,
+        [isTwElement]: true,
       } as { [key in keyof OmitNever<IStyledStatics<OuterProps>>]: true }
     )
   }

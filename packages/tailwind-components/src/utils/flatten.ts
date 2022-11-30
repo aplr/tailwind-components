@@ -1,4 +1,4 @@
-import { AnyComponent, ExecutionContext, Interpolation, RuleSet, TailwindComponent } from "../types"
+import { AnyComponent, ExecutionProps, Interpolation, RuleSet, TailwindComponent } from "../types"
 import getComponentName from "./getComponentName"
 import isFunction from "./isFunction"
 import isPlainObject from "./isPlainObject"
@@ -12,7 +12,7 @@ const isFalsish = (chunk: any): chunk is undefined | null | false | "" =>
 
 export default function flatten<Props extends object>(
   chunk: Interpolation<Props>,
-  executionContext?: ExecutionContext & Props
+  executionContext?: ExecutionProps & Props
 ): RuleSet<Props> {
   if (Array.isArray(chunk)) {
     return chunk.flatMap(interpolation => {

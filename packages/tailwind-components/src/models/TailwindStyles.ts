@@ -1,5 +1,5 @@
 import { twMerge } from "tailwind-merge"
-import { ExecutionContext, RuleSet } from "../types"
+import { ExecutionProps, RuleSet } from "../types"
 import flatten from "../utils/flatten"
 
 const clean = (chunks: string[]) =>
@@ -20,7 +20,7 @@ export class TailwindStyles<Props extends object> {
     this.baseStyle = baseStyle
   }
 
-  generateClasses(executionContext: ExecutionContext & Props, inheritedClasses?: string): string {
+  generateClasses(executionContext: ExecutionProps & Props, inheritedClasses?: string): string {
     const baseGeneratedClasses = this.baseStyle?.generateClasses(executionContext) ?? []
     const generatedClasses = clean(flatten(this.rules, executionContext) as string[])
     return twMerge([baseGeneratedClasses, ...generatedClasses, inheritedClasses].filter(Boolean))

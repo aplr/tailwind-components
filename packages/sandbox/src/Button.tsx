@@ -57,7 +57,7 @@ export const Button = <E extends ElementType = "button">({
   children,
   ...props
 }: ButtonProps<E>) => (
-  <StyledButton $as={as} $style={style} $size={size} $pill={pill} {...props}>
+  <StyledButton as={as} $style={style} $size={size} $pill={pill} {...props}>
     {children}
   </StyledButton>
 )
