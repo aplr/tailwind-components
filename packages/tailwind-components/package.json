@@ -1,6 +1,6 @@
 {
   "name": "@aplr/tailwind-components",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "sideEffects": false,
   "keywords": [
     "react",
